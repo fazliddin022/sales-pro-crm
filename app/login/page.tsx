@@ -58,12 +58,16 @@ export default function LoginPage() {
           return;
         }
 
-        // Auto login
-        await signIn("credentials", {
+        const loginRes = await signIn("credentials", {
           email: form.email,
           password: form.password,
           redirect: false,
         });
+
+        if (loginRes?.error) {
+          setError("Account created but login failed. Please try logging in.");
+          return;
+        }
 
         router.push("/dashboard");
       }
