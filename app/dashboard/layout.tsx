@@ -22,7 +22,7 @@ export default async function DashboardLayout({
           background: "white",
           borderBottom: "1px solid #e5e7eb",
           padding: "0 2rem",
-          height: "64px",
+          height: "87px",
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
