@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import Providers from "@/providers";
+
 
 const geist = Geist({
   variable: "--font-geist",
@@ -20,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={geist.variable}>
       <body style={{ fontFamily: "var(--font-geist), system-ui, sans-serif" }}>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Contact } from "@/lib/schema";
 import {
   Plus,
@@ -33,16 +33,16 @@ export default function ContactsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     const res = await fetch("/api/contacts");
     const data = await res.json();
     setContacts(data);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   const handleOpen = (contact?: Contact) => {
     if (contact) {
@@ -80,7 +80,7 @@ export default function ContactsPage() {
           body: JSON.stringify(form),
         });
         const updated = await res.json();
-        setContacts(contacts.map((c) => c.id === updated.id ? updated : c));
+        setContacts(contacts.map((c) => (c.id === updated.id ? updated : c)));
       } else {
         const res = await fetch("/api/contacts", {
           method: "POST",
@@ -102,10 +102,11 @@ export default function ContactsPage() {
     setContacts(contacts.filter((c) => c.id !== id));
   };
 
-  const filtered = contacts.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.company?.toLowerCase().includes(search.toLowerCase()) ||
-    c.email?.toLowerCase().includes(search.toLowerCase())
+  const filtered = contacts.filter(
+    (c) =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.company?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()),
   );
 
   const INPUT_STYLE: React.CSSProperties = {
@@ -122,18 +123,26 @@ export default function ContactsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Header */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "1rem",
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem",
+        }}
+      >
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>
             Contacts
           </h1>
-          <p style={{ color: "#6b7280", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+          <p
+            style={{
+              color: "#6b7280",
+              fontSize: "0.875rem",
+              marginTop: "0.25rem",
+            }}
+          >
             {contacts.length} total contacts
           </p>
         </div>
@@ -160,13 +169,16 @@ export default function ContactsPage() {
 
       {/* Search */}
       <div style={{ position: "relative", maxWidth: "400px" }}>
-        <Search size={16} style={{
-          position: "absolute",
-          left: "0.875rem",
-          top: "50%",
-          transform: "translateY(-50%)",
-          color: "#9ca3af",
-        }} />
+        <Search
+          size={16}
+          style={{
+            position: "absolute",
+            left: "0.875rem",
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "#9ca3af",
+          }}
+        />
         <input
           placeholder="Search contacts..."
           value={search}
@@ -179,18 +191,24 @@ export default function ContactsPage() {
       </div>
 
       {/* Table */}
-      <div style={{
-        background: "white",
-        borderRadius: "1rem",
-        border: "1px solid #e5e7eb",
-        overflow: "hidden",
-      }}>
+      <div
+        style={{
+          background: "white",
+          borderRadius: "1rem",
+          border: "1px solid #e5e7eb",
+          overflow: "hidden",
+        }}
+      >
         {loading ? (
-          <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}>
+          <div
+            style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}
+          >
             Loading...
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}>
+          <div
+            style={{ textAlign: "center", padding: "3rem", color: "#9ca3af" }}
+          >
             <Users size={40} style={{ margin: "0 auto 1rem" }} />
             <p style={{ fontWeight: 500 }}>No contacts found</p>
             <p style={{ fontSize: "0.875rem", marginTop: "0.25rem" }}>
@@ -200,20 +218,30 @@ export default function ContactsPage() {
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #f3f4f6", background: "#f9fafb" }}>
-                {["Name", "Email", "Phone", "Company", "Position", ""].map((h) => (
-                  <th key={h} style={{
-                    padding: "0.875rem 1rem",
-                    textAlign: "left",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    color: "#6b7280",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}>
-                    {h}
-                  </th>
-                ))}
+              <tr
+                style={{
+                  borderBottom: "1px solid #f3f4f6",
+                  background: "#f9fafb",
+                }}
+              >
+                {["Name", "Email", "Phone", "Company", "Position", ""].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: "0.875rem 1rem",
+                        textAlign: "left",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        color: "#6b7280",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -221,33 +249,61 @@ export default function ContactsPage() {
                 <tr
                   key={contact.id}
                   style={{
-                    borderBottom: i < filtered.length - 1 ? "1px solid #f3f4f6" : "none",
+                    borderBottom:
+                      i < filtered.length - 1 ? "1px solid #f3f4f6" : "none",
                     transition: "background 0.15s",
                   }}
                 >
                   <td style={{ padding: "1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                      <div style={{
-                        width: "36px",
-                        height: "36px",
-                        background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                        borderRadius: "50%",
+                    <div
+                      style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}>
-                        <span style={{ color: "white", fontSize: "0.75rem", fontWeight: 700 }}>
+                        gap: "0.75rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "36px",
+                          height: "36px",
+                          background:
+                            "linear-gradient(135deg, #2563eb, #7c3aed)",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: "white",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                          }}
+                        >
                           {contact.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <span style={{ fontWeight: 500, color: "#111827", fontSize: "0.875rem" }}>
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          color: "#111827",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         {contact.name}
                       </span>
                     </div>
                   </td>
                   <td style={{ padding: "1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.375rem",
+                      }}
+                    >
                       {contact.email && <Mail size={13} color="#9ca3af" />}
                       <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>
                         {contact.email || "—"}
@@ -255,7 +311,13 @@ export default function ContactsPage() {
                     </div>
                   </td>
                   <td style={{ padding: "1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.375rem",
+                      }}
+                    >
                       {contact.phone && <Phone size={13} color="#9ca3af" />}
                       <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>
                         {contact.phone || "—"}
@@ -263,8 +325,16 @@ export default function ContactsPage() {
                     </div>
                   </td>
                   <td style={{ padding: "1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                      {contact.company && <Building2 size={13} color="#9ca3af" />}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.375rem",
+                      }}
+                    >
+                      {contact.company && (
+                        <Building2 size={13} color="#9ca3af" />
+                      )}
                       <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>
                         {contact.company || "—"}
                       </span>
@@ -276,7 +346,13 @@ export default function ContactsPage() {
                     </span>
                   </td>
                   <td style={{ padding: "1rem" }}>
-                    <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        justifyContent: "flex-end",
+                      }}
+                    >
                       <button
                         onClick={() => handleOpen(contact)}
                         style={{
@@ -316,30 +392,36 @@ export default function ContactsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.4)",
-          zIndex: 100,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "1rem",
-        }}>
-          <div style={{
-            background: "white",
-            borderRadius: "1.25rem",
-            padding: "1.5rem",
-            width: "100%",
-            maxWidth: "480px",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
-          }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1.5rem",
-            }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "1.25rem",
+              padding: "1.5rem",
+              width: "100%",
+              maxWidth: "480px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.5rem",
+              }}
+            >
               <h2 style={{ fontWeight: 700, color: "#111827" }}>
                 {editing ? "Edit Contact" : "New Contact"}
               </h2>
@@ -358,27 +440,45 @@ export default function ContactsPage() {
               </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.875rem",
+              }}
+            >
               {[
                 { key: "name", label: "Full Name *", placeholder: "John Doe" },
-                { key: "email", label: "Email", placeholder: "john@example.com" },
-                { key: "phone", label: "Phone", placeholder: "+1 234 567 8900" },
+                {
+                  key: "email",
+                  label: "Email",
+                  placeholder: "john@example.com",
+                },
+                {
+                  key: "phone",
+                  label: "Phone",
+                  placeholder: "+1 234 567 8900",
+                },
                 { key: "company", label: "Company", placeholder: "Acme Inc." },
                 { key: "position", label: "Position", placeholder: "CEO" },
               ].map((field) => (
                 <div key={field.key}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.8rem",
-                    fontWeight: 500,
-                    color: "#374151",
-                    marginBottom: "0.375rem",
-                  }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.8rem",
+                      fontWeight: 500,
+                      color: "#374151",
+                      marginBottom: "0.375rem",
+                    }}
+                  >
                     {field.label}
                   </label>
                   <input
                     value={form[field.key as keyof typeof form]}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, [field.key]: e.target.value })
+                    }
                     placeholder={field.placeholder}
                     style={INPUT_STYLE}
                   />
@@ -386,13 +486,15 @@ export default function ContactsPage() {
               ))}
 
               <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "0.8rem",
-                  fontWeight: 500,
-                  color: "#374151",
-                  marginBottom: "0.375rem",
-                }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                    color: "#374151",
+                    marginBottom: "0.375rem",
+                  }}
+                >
                   Notes
                 </label>
                 <textarea
@@ -409,12 +511,14 @@ export default function ContactsPage() {
               </div>
             </div>
 
-            <div style={{
-              display: "flex",
-              gap: "0.75rem",
-              marginTop: "1.5rem",
-              justifyContent: "flex-end",
-            }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                marginTop: "1.5rem",
+                justifyContent: "flex-end",
+              }}
+            >
               <button
                 onClick={handleClose}
                 style={{
@@ -438,7 +542,9 @@ export default function ContactsPage() {
                   alignItems: "center",
                   gap: "0.5rem",
                   padding: "0.625rem 1.25rem",
-                  background: saving ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #7c3aed)",
+                  background: saving
+                    ? "#93c5fd"
+                    : "linear-gradient(135deg, #2563eb, #7c3aed)",
                   color: "white",
                   border: "none",
                   borderRadius: "0.75rem",

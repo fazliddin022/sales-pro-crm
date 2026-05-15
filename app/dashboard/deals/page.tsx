@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Deal } from "@/lib/schema";
-import {
-  Plus,
-  X,
-  Check,
-  Trash2,
-  DollarSign,
-  GripVertical,
-} from "lucide-react";
+import { Plus, X, Check, Trash2, DollarSign, GripVertical } from "lucide-react";
 
 const STAGES = [
   { key: "lead", label: "Lead", color: "#6b7280", bg: "#f3f4f6" },
@@ -43,16 +36,16 @@ export default function DealsPage() {
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDeals();
-  }, []);
-
-  const fetchDeals = async () => {
+  const fetchDeals = useCallback(async () => {
     const res = await fetch("/api/deals");
     const data = await res.json();
     setDeals(data);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDeals();
+  }, [fetchDeals]);
 
   const handleOpen = (deal?: Deal, stage?: string) => {
     if (deal) {
@@ -94,7 +87,7 @@ export default function DealsPage() {
           body: JSON.stringify(payload),
         });
         const updated = await res.json();
-        setDeals(deals.map((d) => d.id === updated.id ? updated : d));
+        setDeals(deals.map((d) => (d.id === updated.id ? updated : d)));
       } else {
         const res = await fetch("/api/deals", {
           method: "POST",
@@ -136,9 +129,11 @@ export default function DealsPage() {
     }
 
     // Optimistic update
-    setDeals(deals.map((d) =>
-      d.id === dragging ? { ...d, stage: stage as Deal["stage"] } : d
-    ));
+    setDeals(
+      deals.map((d) =>
+        d.id === dragging ? { ...d, stage: stage as Deal["stage"] } : d,
+      ),
+    );
 
     // API call
     await fetch(`/api/deals/${dragging}`, {
@@ -169,7 +164,9 @@ export default function DealsPage() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", paddingTop: "4rem", color: "#9ca3af" }}>
+      <div
+        style={{ textAlign: "center", paddingTop: "4rem", color: "#9ca3af" }}
+      >
         Loading deals...
       </div>
     );
@@ -178,18 +175,27 @@ export default function DealsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Header */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>
             Deals Pipeline
           </h1>
-          <p style={{ color: "#6b7280", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+          <p
+            style={{
+              color: "#6b7280",
+              fontSize: "0.875rem",
+              marginTop: "0.25rem",
+            }}
+          >
             {deals.length} deals · $
-            {deals.reduce((s, d) => s + (d.value || 0), 0).toLocaleString()} total
+            {deals.reduce((s, d) => s + (d.value || 0), 0).toLocaleString()}{" "}
+            total
           </p>
         </div>
         <button
@@ -214,12 +220,14 @@ export default function DealsPage() {
       </div>
 
       {/* Kanban Board */}
-      <div style={{
-        display: "flex",
-        gap: "1rem",
-        overflowX: "auto",
-        paddingBottom: "1rem",
-      }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "1rem",
+          overflowX: "auto",
+          paddingBottom: "1rem",
+        }}
+      >
         {STAGES.map((stage) => {
           const stageDeals = getStageDeals(stage.key);
           const stageTotal = getStageTotal(stage.key);
@@ -242,36 +250,50 @@ export default function DealsPage() {
             >
               {/* Column header */}
               <div style={{ marginBottom: "0.875rem" }}>
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "0.375rem",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <div style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "50%",
-                      background: stage.color,
-                    }} />
-                    <span style={{
-                      fontSize: "0.8rem",
-                      fontWeight: 700,
-                      color: "#374151",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                    }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "0.375rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "10px",
+                        height: "10px",
+                        borderRadius: "50%",
+                        background: stage.color,
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "0.8rem",
+                        fontWeight: 700,
+                        color: "#374151",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                      }}
+                    >
                       {stage.label}
                     </span>
-                    <span style={{
-                      fontSize: "0.7rem",
-                      background: stage.bg,
-                      color: stage.color,
-                      padding: "0.1rem 0.5rem",
-                      borderRadius: "999px",
-                      fontWeight: 600,
-                    }}>
+                    <span
+                      style={{
+                        fontSize: "0.7rem",
+                        background: stage.bg,
+                        color: stage.color,
+                        padding: "0.1rem 0.5rem",
+                        borderRadius: "999px",
+                        fontWeight: 600,
+                      }}
+                    >
                       {stageDeals.length}
                     </span>
                   </div>
@@ -290,16 +312,30 @@ export default function DealsPage() {
                   </button>
                 </div>
                 {stageTotal > 0 && (
-                  <p style={{ fontSize: "0.75rem", color: "#6b7280", fontWeight: 500 }}>
+                  <p
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#6b7280",
+                      fontWeight: 500,
+                    }}
+                  >
                     ${stageTotal.toLocaleString()}
                   </p>
                 )}
               </div>
 
               {/* Cards */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.625rem",
+                }}
+              >
                 {stageDeals.map((deal) => {
-                  const priority = PRIORITIES.find((p) => p.key === deal.priority);
+                  const priority = PRIORITIES.find(
+                    (p) => p.key === deal.priority,
+                  );
                   return (
                     <div
                       key={deal.id}
@@ -317,20 +353,30 @@ export default function DealsPage() {
                         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                       }}
                     >
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "0.5rem",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.375rem",
+                          }}
+                        >
                           <GripVertical size={14} color="#d1d5db" />
-                          <p style={{
-                            fontSize: "0.875rem",
-                            fontWeight: 600,
-                            color: "#111827",
-                            lineHeight: 1.3,
-                          }}>
+                          <p
+                            style={{
+                              fontSize: "0.875rem",
+                              fontWeight: 600,
+                              color: "#111827",
+                              lineHeight: 1.3,
+                            }}
+                          >
                             {deal.title}
                           </p>
                         </div>
@@ -365,32 +411,38 @@ export default function DealsPage() {
                       </div>
 
                       {deal.value ? (
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.25rem",
-                          marginBottom: "0.5rem",
-                        }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.25rem",
+                            marginBottom: "0.5rem",
+                          }}
+                        >
                           <DollarSign size={13} color="#059669" />
-                          <span style={{
-                            fontSize: "0.875rem",
-                            fontWeight: 700,
-                            color: "#059669",
-                          }}>
+                          <span
+                            style={{
+                              fontSize: "0.875rem",
+                              fontWeight: 700,
+                              color: "#059669",
+                            }}
+                          >
                             {deal.value.toLocaleString()}
                           </span>
                         </div>
                       ) : null}
 
                       {priority && (
-                        <span style={{
-                          fontSize: "0.7rem",
-                          fontWeight: 600,
-                          padding: "0.15rem 0.5rem",
-                          borderRadius: "999px",
-                          background: `${priority.color}15`,
-                          color: priority.color,
-                        }}>
+                        <span
+                          style={{
+                            fontSize: "0.7rem",
+                            fontWeight: 600,
+                            padding: "0.15rem 0.5rem",
+                            borderRadius: "999px",
+                            background: `${priority.color}15`,
+                            color: priority.color,
+                          }}
+                        >
                           {priority.label}
                         </span>
                       )}
@@ -399,14 +451,16 @@ export default function DealsPage() {
                 })}
 
                 {stageDeals.length === 0 && (
-                  <div style={{
-                    textAlign: "center",
-                    padding: "1.5rem 0.5rem",
-                    color: "#d1d5db",
-                    fontSize: "0.75rem",
-                    border: "2px dashed #e5e7eb",
-                    borderRadius: "0.75rem",
-                  }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      padding: "1.5rem 0.5rem",
+                      color: "#d1d5db",
+                      fontSize: "0.75rem",
+                      border: "2px dashed #e5e7eb",
+                      borderRadius: "0.75rem",
+                    }}
+                  >
                     Drop here
                   </div>
                 )}
@@ -418,30 +472,36 @@ export default function DealsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.4)",
-          zIndex: 100,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "1rem",
-        }}>
-          <div style={{
-            background: "white",
-            borderRadius: "1.25rem",
-            padding: "1.5rem",
-            width: "100%",
-            maxWidth: "440px",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
-          }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1.5rem",
-            }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "1.25rem",
+              padding: "1.5rem",
+              width: "100%",
+              maxWidth: "440px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1.5rem",
+              }}
+            >
               <h2 style={{ fontWeight: 700, color: "#111827" }}>
                 {editing ? "Edit Deal" : "New Deal"}
               </h2>
@@ -460,15 +520,23 @@ export default function DealsPage() {
               </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.875rem",
+              }}
+            >
               <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "0.8rem",
-                  fontWeight: 500,
-                  color: "#374151",
-                  marginBottom: "0.375rem",
-                }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                    color: "#374151",
+                    marginBottom: "0.375rem",
+                  }}
+                >
                   Deal Title *
                 </label>
                 <input
@@ -480,13 +548,15 @@ export default function DealsPage() {
               </div>
 
               <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "0.8rem",
-                  fontWeight: 500,
-                  color: "#374151",
-                  marginBottom: "0.375rem",
-                }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                    color: "#374151",
+                    marginBottom: "0.375rem",
+                  }}
+                >
                   Value ($)
                 </label>
                 <input
@@ -498,58 +568,78 @@ export default function DealsPage() {
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.875rem",
+                }}
+              >
                 <div>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.8rem",
-                    fontWeight: 500,
-                    color: "#374151",
-                    marginBottom: "0.375rem",
-                  }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.8rem",
+                      fontWeight: 500,
+                      color: "#374151",
+                      marginBottom: "0.375rem",
+                    }}
+                  >
                     Stage
                   </label>
                   <select
                     value={form.stage}
-                    onChange={(e) => setForm({ ...form, stage: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, stage: e.target.value })
+                    }
                     style={INPUT_STYLE}
                   >
                     {STAGES.map((s) => (
-                      <option key={s.key} value={s.key}>{s.label}</option>
+                      <option key={s.key} value={s.key}>
+                        {s.label}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.8rem",
-                    fontWeight: 500,
-                    color: "#374151",
-                    marginBottom: "0.375rem",
-                  }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.8rem",
+                      fontWeight: 500,
+                      color: "#374151",
+                      marginBottom: "0.375rem",
+                    }}
+                  >
                     Priority
                   </label>
                   <select
                     value={form.priority}
-                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, priority: e.target.value })
+                    }
                     style={INPUT_STYLE}
                   >
                     {PRIORITIES.map((p) => (
-                      <option key={p.key} value={p.key}>{p.label}</option>
+                      <option key={p.key} value={p.key}>
+                        {p.label}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label style={{
-                  display: "block",
-                  fontSize: "0.8rem",
-                  fontWeight: 500,
-                  color: "#374151",
-                  marginBottom: "0.375rem",
-                }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                    color: "#374151",
+                    marginBottom: "0.375rem",
+                  }}
+                >
                   Notes
                 </label>
                 <textarea
@@ -557,17 +647,23 @@ export default function DealsPage() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   placeholder="Additional notes..."
                   rows={3}
-                  style={{ ...INPUT_STYLE, resize: "vertical", fontFamily: "inherit" }}
+                  style={{
+                    ...INPUT_STYLE,
+                    resize: "vertical",
+                    fontFamily: "inherit",
+                  }}
                 />
               </div>
             </div>
 
-            <div style={{
-              display: "flex",
-              gap: "0.75rem",
-              marginTop: "1.5rem",
-              justifyContent: "flex-end",
-            }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                marginTop: "1.5rem",
+                justifyContent: "flex-end",
+              }}
+            >
               <button
                 onClick={handleClose}
                 style={{
@@ -591,7 +687,9 @@ export default function DealsPage() {
                   alignItems: "center",
                   gap: "0.5rem",
                   padding: "0.625rem 1.25rem",
-                  background: saving ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #7c3aed)",
+                  background: saving
+                    ? "#93c5fd"
+                    : "linear-gradient(135deg, #2563eb, #7c3aed)",
                   color: "white",
                   border: "none",
                   borderRadius: "0.75rem",
